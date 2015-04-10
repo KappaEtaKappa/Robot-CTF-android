@@ -11,4 +11,7 @@
     <string name="action_example">Example action</string>
 
     <string name="action_settings">Settings</string>
+    <string name="loadout_listview_name">Name: </string>
+    <string name="loadout_item_mac">MAC:</string>
+    <string name="unknown">New Text</string>
 </resources>

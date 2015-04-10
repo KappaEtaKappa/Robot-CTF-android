@@ -1,27 +1,28 @@
 package org.khk.robotctf.robotctfcontroller;
 
-import android.app.Activity;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
+import android.support.v4.app.Fragment;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.support.v4.widget.DrawerLayout;
-import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
+
+import org.khk.robotctf.robotctfcontroller.util.JSO;
+import org.khk.robotctf.robotctfcontroller.util.NodeNotFound;
+import org.khk.robotctf.robotctfcontroller.util.malformedJSON;
+
+import java.io.InputStream;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity{
 
     /**
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
@@ -32,7 +33,7 @@ public class MainActivity extends ActionBarActivity {
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
      */
     private CharSequence mTitle;
-    private robot[] robots = new robot[4];
+    private JSO robots;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +42,22 @@ public class MainActivity extends ActionBarActivity {
 
         mTitle = getTitle();
 
-        for (int i = 0; i < 4; i++)
-            robots[i] = new robot("Robbie"+i, "1000" + i, "purple", i);
+        try {
+            InputStream robotsJSON = getResources().openRawResource(R.raw.robots);
+            robots = new JSO(robotsJSON);
+        }catch (malformedJSON e) {
+            e.printStackTrace();
+        }
 
-        ListAdapter adapter = new loadout_list_view_adapter(this, robots);
-        ((ListView)findViewById(R.id.loadout)).setAdapter(adapter);
+        ListAdapter adapter = null;
+        try {
+            adapter = new loadout_list_view_adapter(this, robots);
+        } catch (NodeNotFound nodeNotFound) {
+            nodeNotFound.printStackTrace();
+        }
+        ListView roboList = ((ListView)findViewById(R.id.loadout));
+        roboList.setAdapter(adapter);
+        roboList.setOnItemClickListener((AdapterView.OnItemClickListener) adapter);
     }
 
 
