@@ -1,6 +1,7 @@
 package org.khk.robotctf.robotctfcontroller;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -56,6 +57,9 @@ public class loadout_list_view_adapter extends ArrayAdapter<JSO> implements Adap
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Toast.makeText(this.context, "" + position, Toast.LENGTH_SHORT).show();
+
+        Intent openController = new Intent(context, ControllerActivity.class);
+        context.startActivity(openController);
 
     }
 }
