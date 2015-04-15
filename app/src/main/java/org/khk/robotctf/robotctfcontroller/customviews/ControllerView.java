@@ -11,6 +11,7 @@ import android.view.Display;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.widget.Toast;
 
 import org.khk.robotctf.robotctfcontroller.ControllerActivity;
 
@@ -38,7 +39,6 @@ public class ControllerView extends View{
         brush.setColor(Color.CYAN);
         canvas.drawCircle(50, 50, 10, brush);
 
-
         vKnob.draw(canvas);
         hKnob.draw(canvas);
     }
@@ -58,9 +58,36 @@ public class ControllerView extends View{
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+        for(int i = 0; i < ev.getPointerCount(); i++)
+            Log.d("me", "index: "+i+" x:"+ev.getX(i)+" y:"+ev.getY(i) );
 
-//        vKnob.trackTouch(ev);
+
+        int count = ev.getPointerCount() -1;
+        int index = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+        int ID = ev.getPointerId(index);
+
+
+        switch(ev.getAction() & MotionEvent.ACTION_MASK){
+            case MotionEvent.ACTION_DOWN: Log.d("me", "Down: " + index + "/"+count);
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN: Log.d("me", "POINTER Down: " + index + "/"+count);
+                break;
+            case MotionEvent.ACTION_MOVE: Log.d("me", "Move: " + index + "/"+count);
+                break;
+            case MotionEvent.ACTION_UP: Log.d("me", "Up: " + index + "/"+count);
+                break;
+            case MotionEvent.ACTION_POINTER_UP: Log.d("me", "POINTER Up: " + index + "/"+count);
+                break;
+            default:  Log.d("me", "Default: " + index + "/"+count);
+
+        }
+
+
+
+
+        vKnob.trackTouch(ev);
         hKnob.trackTouch(ev);
+        invalidate();
         return true;
     }
 
@@ -68,13 +95,14 @@ public class ControllerView extends View{
         private Paint brush;
         public float knubPosition;// -1.0 - 1.0
         public int padding;
-        private int touchID;
         public float trackWidth;
+        private int touchID;
 
         public H_Throttle(){
             this.brush = new Paint();
             this.knubPosition = 0.5f;
             this.padding = 10;
+            this.touchID = -1;
         }
 
         public void draw(Canvas canvas){
@@ -89,40 +117,44 @@ public class ControllerView extends View{
 
             canvas.drawLine(halfWidth+padding, height/2, halfWidth+width/2-padding, height/2, brush);
 
-            trackWidth = (width/2-20);
+            trackWidth = (width/2-2*padding);
             canvas.drawCircle(halfWidth+padding+knubPosition*trackWidth, height/2, 20, brush);
 
         }
 
         public void moveKnob(float x){
-            if(x < getWidth()/2+10)
-                x = getWidth()/2+10;
-            if(x > getWidth()-10)
-                x = getWidth()-10;
+            if(x < getWidth()/2+padding)
+                x = getWidth()/2+padding;
+            if(x > getWidth()-padding)
+                x = getWidth()-padding;
 
             float realXonTrack = (x - (getWidth()/2+padding));
             knubPosition = realXonTrack/trackWidth;
+
         }
 
         public void trackTouch(MotionEvent ev) {
-            Log.d("wat", ev.getX() +">"+ getWidth()/2  +"&&"+ ev.getX() +"<"+ getWidth());
-            switch(ev.getAction()){
+            int index = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+
+            switch(ev.getAction() & MotionEvent.ACTION_MASK){
                 case MotionEvent.ACTION_DOWN:
-                    if( ev.getX() > getWidth()/2  && ev.getX() < getWidth()){
-                        touchID = ev.getPointerId(ev.getActionIndex());
-                        moveKnob(ev.getX());
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    if( ev.getX(index) > getWidth()/2  && ev.getX(index) < getWidth() && touchID == -1){
+                        touchID = ev.getPointerId(index);
+                        moveKnob(ev.getX(index));
                     }
                     break;
                 case MotionEvent.ACTION_MOVE:
-//                    if( ev.getPointerId(ev.getActionIndex()) == touchID ){
-                        moveKnob(ev.getX());
-//                    }
+                    if( touchID != -1){
+                        moveKnob(ev.getX(ev.findPointerIndex(touchID)));
+                    }
                     break;
                 case MotionEvent.ACTION_UP:
-//                    if( ev.getPointerId(ev.getActionIndex()) == touchID ){
+                case MotionEvent.ACTION_POINTER_UP:
+                    if( ev.getPointerId(index) == touchID ){
                         touchID = -1;
-                        moveKnob(0.5f);
-//                    }
+                        this.knubPosition = 0.5f;
+                    }
                     break;
             }
         }
@@ -132,12 +164,14 @@ public class ControllerView extends View{
         private Paint brush;
         public float knubPosition;// 0.0 - 1.0
         public int padding;
+        private float trackWidth;
+        private int touchID;
 
         public V_Throttle(){
             this.brush = new Paint();
             this.knubPosition = 0.5f;
             this.padding = 10;
-
+            touchID = -1;
         }
 
         public void draw(Canvas canvas){
@@ -151,9 +185,46 @@ public class ControllerView extends View{
 
             canvas.drawLine(width/2/2, padding, width/2/2, height-padding, brush);
 
-            float trackWidth = (width/2-20);
-            canvas.drawCircle(padding+knubPosition*trackWidth, height/2, 20, brush);
+            trackWidth = (height-2*padding);
+            canvas.drawCircle(width/2/2, padding+knubPosition*trackWidth, 20, brush);
 
+        }
+
+        public void moveKnob(float y){
+            if(y < padding)
+                y = padding;
+            if(y > getHeight()-padding)
+                y = getHeight()-padding;
+
+            float realYonTrack = (y - (padding));
+            knubPosition = realYonTrack/trackWidth;
+            int i = 0;
+        }
+
+        public void trackTouch(MotionEvent ev) {
+            int index = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
+
+            switch(ev.getAction() & MotionEvent.ACTION_MASK){
+                case MotionEvent.ACTION_DOWN:
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    if( ev.getX(index) > 0  && ev.getX(index) < getWidth()/2 && touchID == -1){
+                        touchID = ev.getPointerId(index);
+                        moveKnob(ev.getY(index));
+                    }
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    if( touchID != -1){
+                        moveKnob(ev.getY(ev.findPointerIndex(touchID)));
+                    }
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_POINTER_UP:
+                    if( ev.getPointerId(index) == touchID ){
+                        touchID = -1;
+                        this.knubPosition = 0.5f;
+                    }
+                    break;
+            }
         }
 
     }

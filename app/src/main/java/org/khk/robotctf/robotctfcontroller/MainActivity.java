@@ -41,7 +41,7 @@ public class MainActivity extends ActionBarActivity{
         try {
             InputStream robotsJSON = getResources().openRawResource(R.raw.robots);
             robots = new JSO(robotsJSON);
-        } catch (malformedJSON e) {
+        }catch (malformedJSON e) {
             e.printStackTrace();
         }
 
