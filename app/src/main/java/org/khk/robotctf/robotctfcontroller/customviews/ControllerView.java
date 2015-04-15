@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import org.khk.robotctf.robotctfcontroller.ControllerActivity;
 
+import java.util.Calendar;
+
 /**
  * Created by Joe Dailey on 4/12/2015.
  */
@@ -26,6 +28,10 @@ public class ControllerView extends View{
 
     private V_Throttle vKnob;
     private H_Throttle hKnob;
+
+    private Long fireCheck1;
+    private Long fireCheck2;
+    private final Long MAX_CLICK_TIME = 200L;
 
     private void init(Context context){
         this.context = context;
@@ -58,32 +64,28 @@ public class ControllerView extends View{
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        for(int i = 0; i < ev.getPointerCount(); i++)
-            Log.d("me", "index: "+i+" x:"+ev.getX(i)+" y:"+ev.getY(i) );
-
-
-        int count = ev.getPointerCount() -1;
-        int index = (ev.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
-        int ID = ev.getPointerId(index);
-
-
         switch(ev.getAction() & MotionEvent.ACTION_MASK){
-            case MotionEvent.ACTION_DOWN: Log.d("me", "Down: " + index + "/"+count);
+            case MotionEvent.ACTION_DOWN:
+                fireCheck1 = Calendar.getInstance().getTimeInMillis();
                 break;
-            case MotionEvent.ACTION_POINTER_DOWN: Log.d("me", "POINTER Down: " + index + "/"+count);
+            case MotionEvent.ACTION_POINTER_DOWN:
+                fireCheck2 = Calendar.getInstance().getTimeInMillis();
                 break;
-            case MotionEvent.ACTION_MOVE: Log.d("me", "Move: " + index + "/"+count);
+            case MotionEvent.ACTION_UP: {
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - fireCheck1;
+                if (clickDuration < MAX_CLICK_TIME) {
+                    Toast.makeText(getContext(), "Fire!", Toast.LENGTH_SHORT).show();
+                }
+            }
                 break;
-            case MotionEvent.ACTION_UP: Log.d("me", "Up: " + index + "/"+count);
+            case MotionEvent.ACTION_POINTER_UP: {
+                long clickDuration = Calendar.getInstance().getTimeInMillis() - fireCheck2;
+                if (clickDuration < MAX_CLICK_TIME) {
+                    Toast.makeText(getContext(), "Fire!", Toast.LENGTH_SHORT).show();
+                }
+            }
                 break;
-            case MotionEvent.ACTION_POINTER_UP: Log.d("me", "POINTER Up: " + index + "/"+count);
-                break;
-            default:  Log.d("me", "Default: " + index + "/"+count);
-
         }
-
-
-
 
         vKnob.trackTouch(ev);
         hKnob.trackTouch(ev);
